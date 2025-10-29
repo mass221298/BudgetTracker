@@ -1,0 +1,17 @@
+/* Pills */
+.pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted)}
+.pill i{opacity:.8}
+
+/* Toasts */
+.toast{
+  position:fixed; right:20px; top:20px; z-index:1000; padding:12px 14px; border-radius:12px;
+  color:#fff; display:flex; gap:10px; align-items:center; box-shadow:var(--shadow);
+  animation:toastIn .25s ease; border:1px solid #00000020;
+}
+.toast.success{background:linear-gradient(120deg, #16a34a, #22c55e)}
+.toast.error{background:linear-gradient(120deg, #ef4444, #f87171)}
+.toast.info{background:linear-gradient(120deg, var(--primary), var(--primary-600))}
+@keyframes toastIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+/* Glass helpers */
+.glass{backdrop-filter: blur(10px)}

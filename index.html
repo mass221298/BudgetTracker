@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BudgetTracker — Dashboard</title>
+
+  <!-- Icons & Fonts -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"/>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="/styles/main.css"/>
+  <link rel="stylesheet" href="/styles/components.css"/>
+  <link rel="stylesheet" href="/styles/responsive.css"/>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Topbar -->
+    <header class="topbar glass">
+      <div class="left">
+        <button id="sidebarToggle" class="icon-btn" title="Menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <div class="brand">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>BudgetTracker</span>
+          <span class="badge">2.0</span>
+        </div>
+        <div class="searchbar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="searchInput" type="search" placeholder="Rechercher une transaction (titre, catégorie, description) …" />
+        </div>
+      </div>
+      <div class="right">
+        <div id="autosaveStatus" class="autosave" aria-live="polite">
+          <span class="dot"></span><span class="label">Enregistré</span>
+        </div>
+        <button id="exportBtn" class="btn btn-ghost" title="Exporter (Ctrl/Cmd + E)">
+          <i class="fa-solid fa-download"></i><span>Exporter</span>
+        </button>
+        <button id="importBtn" class="btn btn-ghost">
+          <i class="fa-solid fa-file-import"></i><span>Importer</span>
+        </button>
+        <button id="resetBtn" class="btn btn-danger">
+          <i class="fa-solid fa-trash"></i><span>Reset</span>
+        </button>
+        <button id="themeToggle" class="icon-btn" title="Basculer thème">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar glass" id="sidebar">
+      <nav>
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-gauge"></i> Tableau de bord
+        </button>
+        <button class="nav-item" data-tab="transactions">
+          <i class="fa-solid fa-list"></i> Transactions
+        </button>
+        <button class="nav-item" data-tab="analytics">
+          <i class="fa-solid fa-chart-line"></i> Analyses
+        </button>
+        <button class="nav-item" data-tab="budgets">
+          <i class="fa-solid fa-wallet"></i> Budgets
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <small>Stockage local</small>
+        <div id="storageStats" class="storage-stats"></div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="content">
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="tab active">
+        <div class="cards-grid">
+          <div class="stat-card income">
+            <div class="stat-head">
+              <span>Revenus (mois)</span><i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+            <div id="totalIncome" class="stat-amount">0,00 €</div>
+          </div>
+          <div class="stat-card expenses">
+            <div class="stat-head">
+              <span>Dépenses (mois)</span><i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <div id="totalExpenses" class="stat-amount">0,00 €</div>
+          </div>
+          <div class="stat-card balance">
+            <div class="stat-head">
+              <span>Solde (mois)</span><i class="fa-solid fa-scale-balanced"></i>
+            </div>
+            <div id="totalBalance" class="stat-amount">0,00 €</div>
+          </div>
+          <div class="stat-card budget">
+            <div class="stat-head">
+              <span>Budget restant</span><i class="fa-solid fa-wallet"></i>
+            </div>
+            <div id="remainingBudget" class="stat-amount">0,00 €</div>
+            <div class="progress">
+              <div id="budgetProgress" class="progress-fill"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-grid">
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-plus-circle"></i> Nouvelle transaction</h3>
+            </div>
+            <form id="transactionForm" class="form-grid">
+              <div class="field">
+                <label>Type</label>
+                <div class="segmented">
+                  <input type="radio" id="type-income" name="type" value="income" checked/>
+                  <label for="type-income"><i class="fa-solid fa-circle-plus"></i> Revenu</label>
+                  <input type="radio" id="type-expense" name="type" value="expense"/>
+                  <label for="type-expense"><i class="fa-solid fa-circle-minus"></i> Dépense</label>
+                </div>
+              </div>
+              <div class="field">
+                <label for="title">Titre</label>
+                <input id="title" type="text" placeholder="Ex. Salaire, Loyer, Courses…" required/>
+              </div>
+              <div class="field">
+                <label for="amount">Montant (€)</label>
+                <div class="with-icon">
+                  <i class="fa-solid fa-euro-sign"></i>
+                  <input id="amount" type="number" min="0" step="0.01" placeholder="0,00" required/>
+                </div>
+              </div>
+              <div class="field">
+                <label for="category">Catégorie</label>
+                <select id="category" required></select>
+              </div>
+              <div class="field two">
+                <div>
+                  <label for="date">Date</label>
+                  <input id="date" type="date" required/>
+                </div>
+                <div>
+                  <label for="budget-category">Budget (optionnel)</label>
+                  <select id="budget-category">
+                    <option value="">Aucun budget</option>
+                    <option value="monthly">Budget Mensuel</option>
+                    <option value="food">Budget Alimentation</option>
+                    <option value="entertainment">Budget Loisirs</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label for="description">Description</label>
+                <textarea id="description" rows="2" placeholder="Notes…"></textarea>
+              </div>
+              <button class="btn btn-success btn-block" type="submit">
+                <i class="fa-solid fa-check"></i> Ajouter
+              </button>
+            </form>
+          </div>
+
+          <div class="panel glass">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-list"></i> Historique</h3>
+              <div class="filters">
+                <select id="typeFilter">
+                  <option value="all">Tous</option>
+                  <option value="income">Revenus</option>
+                  <option value="expense">Dépenses</option>
+                </select>
+                <select id="categoryFilter">
+                  <option value="all">Toutes catégories</option>
+                </select>
+                <select id="dateFilter">
+                  <option value="all">Toutes dates</option>
+                  <option value="today">Aujourd’hui</option>
+                  <option value="week">Cette semaine</option>
+                  <option value="month">Ce mois</option>
+                </select>
+              </div>
+            </div>
+            <div id="quickStats" class="quick-stats"></div>
+            <div id="transactionList" class="transaction-list skeleton">
+              <!-- skeleton items -->
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ANALYTICS -->
+      <section id="tab-analytics" class="tab">
+        <div class="panel glass">
+          <div class="panel-head"><h3><i class="fa-solid fa-chart-pie"></i> Répartition des dépenses</h3></div>
+          <div class="chart-wrap"><canvas id="expensesChart"></canvas></div>
+        </div>
+        <div class="panel-grid two">
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="fa-solid fa-chart-line"></i> Évolution mensuelle</h3></div>
+            <div class="chart-wrap"><canvas id="monthlyChart"></canvas></div>
+          </div>
+          <div class="panel glass">
+            <div class="panel-head"><h3><i class="fa-solid fa-chart-column"></i> Revenus vs Dépenses</h3></div>
+            <div class="chart-wrap"><canvas id="comparisonChart"></canvas></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRANSACTIONS (vue liste plein écran) -->
+      <section id="tab-transactions" class="tab">
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3><i class="fa-solid fa-list"></i> Toutes les transactions</h3>
+          </div>
+          <div id="transactionListFull" class="transaction-list"></div>
+        </div>
+      </section>
+
+      <!-- BUDGETS -->
+      <section id="tab-budgets" class="tab">
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3><i class="fa-solid fa-wallet"></i> Budgets</h3>
+            <button id="addBudgetBtn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Nouveau budget</button>
+          </div>
+          <div id="budgetsList" class="budgets-list"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL BUDGET -->
+  <div id="budgetModal" class="modal">
+    <div class="modal-content glass">
+      <div class="modal-header">
+        <h3>Nouveau budget</h3>
+        <button class="icon-btn close" aria-label="Fermer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="budgetForm" class="form-grid">
+        <div class="field">
+          <label for="budget-name">Nom</label>
+          <input id="budget-name" required/>
+        </div>
+        <div class="field">
+          <label for="budget-amount">Montant (€)</label>
+          <input id="budget-amount" type="number" min="0" step="0.01" required/>
+        </div>
+        <div class="field two">
+          <div>
+            <label for="budget-period">Période</label>
+            <select id="budget-period">
+              <option value="monthly">Mensuel</option>
+              <option value="weekly">Hebdomadaire</option>
+              <option value="yearly">Annuel</option>
+            </select>
+          </div>
+          <div>
+            <label for="budget-category-select">Catégorie</label>
+            <select id="budget-category-select">
+              <option value="all">Toutes</option>
+              <option value="housing">Logement</option>
+              <option value="food">Alimentation</option>
+              <option value="transport">Transport</option>
+              <option value="entertainment">Loisirs</option>
+              <option value="health">Santé</option>
+              <option value="education">Éducation</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-success btn-block" type="submit"><i class="fa-solid fa-check"></i> Créer</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="/scripts/app.js"></script>
+  <script src="/scripts/storage.js"></script>
+  <script src="/scripts/transactions.js"></script>
+  <script src="/scripts/charts.js"></script>
+  <script src="/scripts/utils.js"></script>
+</body>
+</html>
